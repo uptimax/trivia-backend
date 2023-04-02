@@ -16,7 +16,7 @@ const adminRoutes = require('./routes/admin-routes');
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: false}));
 
 router.use('/user', userRoutes.routes);
 router.use('/quiz', quizRoutes.routes);
