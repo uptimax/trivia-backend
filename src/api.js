@@ -21,6 +21,9 @@ app.use(express.urlencoded({extended: true}));
 router.use('/user', userRoutes.routes);
 router.use('/quiz', quizRoutes.routes);
 router.use('/admin', adminRoutes.routes);
+router.post('/', (req ,res)=>{
+  res.send('am alive');
+});
 // app.use(expressSession({
 //     secret: 'sfjalskfjalkjsdfklasd',
 //     resave: false,
