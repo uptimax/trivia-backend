@@ -1,5 +1,5 @@
 const express = require('express');
-// const serverless = require('serverless-http');
+const serverless = require('serverless-http');
 const expressSession = require('express-session');
 const bodyParser = require('body-parser');
 const cors = require('cors');
