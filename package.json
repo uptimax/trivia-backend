@@ -23,7 +23,7 @@
     "netlify-lambda": "^2.0.16",
     "nodemon": "^2.0.21",
     "serverless-http": "^3.2.0",
-    "webpack": "^5.77.0"
+    "webpack": "^5.77.0",
     "webpack-node-externals": "^3.0.0"
   }
 }
