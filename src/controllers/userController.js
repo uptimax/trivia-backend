@@ -2,11 +2,19 @@
 const { query } = require('express');
 const firebase = require('../db');
 const User = require('../models/user');
-const { getUser, getUserDocByEmail, Includes, getAdminDocByBooth } = require('../utilities/firestoreUtilities');
+const { getUser, getUserDocByEmail, Includes, getAdminDocByBooth, getProgramData } = require('../utilities/firestoreUtilities');
 const {validateLoginRequest, validateSignupRequest } = require("../utilities/validators");
 
 const firestore = firebase.firestore;
 const auth = firebase.auth;
+
+async function getUserQuizDoc(uid, quizeId){
+    let quizes = firestore.collection('active_quizes').where("uid", '==', uid).where("quiz_id", '==', quizeId).limit(1);
+    let quizesDocs = await quizes.get();
+
+    return quizesDocs.size == 0? null: quizesDocs.docs[0];
+}
+
 
 const signup = async (req, res, next) =>{
     try{
@@ -20,17 +28,9 @@ const signup = async (req, res, next) =>{
         
         let userData = (await getUserDocByEmail(query.email));
         
-        if(userData != null){
-            throw {
-                error: {
-                    user_exists: true
-                }
-            }
-        }
-
-        let adminData = (await getAdminDocByBooth(query.booth));
-        
-        if(adminData == null){
+        let booths = await (await getProgramData()).data().booths;
+        console.log();
+        if(!booths.includes(query.booth.toLowerCase())){
             throw {
                 error: {
                     booth_not_available: true
@@ -38,19 +38,41 @@ const signup = async (req, res, next) =>{
             }
         }
         
-        const newUser = await auth.createUser({email: query.email, password: query.password});
+        if(userData != null){
+        let quizDoc = await getUserQuizDoc(userData.id, userData.data().email);
 
-        const user = await firestore.collection('users').doc(newUser.uid).set({
+        if(quizDoc == null){
+            res.status(200).send({
+                success: true,
+                data: {uid: userData.id,
+                fullname: userData.data().fullname,
+                phoneNumber: userData.data().phonenumber,
+                email: userData.data().email,
+                booth: userData.data().booth,
+                }
+            });
+            return;
+        }
+        
+           throw{
+            error: {
+                quiz_already_taken: true
+            }
+           }
+            return;
+        }
+         let ref = firestore.collection("users").doc();
+         const user = await firestore.collection('users').doc(ref.id).set({
             fullname: query.fullname,
             phonenumber: query.phonenumber,
             email: query.email,
-            password: query.password,
             booth: query.booth,
         });
         
         res.status(200).send({
             success: true,
-            data: {uid: newUser.uid,
+            data: {
+            uid: ref.id,
             fullname: query.fullname,
             phoneNumber: query.phonenumber,
             email: query.email,
@@ -58,6 +80,7 @@ const signup = async (req, res, next) =>{
             }
         });
     }catch(error){
+        console.log(error);
         res.status(400).send(error);
     }
 }
