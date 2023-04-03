@@ -214,7 +214,6 @@ async function quizExpired(){
 }
 
 
-
 const checkExpiryStatus = async (req, res, next) =>{ // this controller apply a specified user for a a quiz
       try {
         checkForUIField(req.body);
