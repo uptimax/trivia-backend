@@ -2,7 +2,7 @@
 const { ConvertCsvToJson } = require('../csvtojson_converter');
 // const { query } = require('express');
 const firebase = require('../db');
-const { getUser, getUserDocByEmail, getAdminDocByEmail, getQuizPaticipantsDocs } = require('../utilities/firestoreUtilities');
+const { getUser, getUserDocByEmail, getAdminDocByEmail, getGameResultsByBooth, getPaticipantsByBooth, getAdminDocByUsername } = require('../utilities/firestoreUtilities');
 const { validateSignupRequest, validateLoginRequest, validateAdminSignupRequest } = require('../utilities/validators');
 
 const firestore = firebase.firestore;
@@ -89,8 +89,28 @@ const getAllQuiz = async (req, res, next) =>{
 const getQuizPaticipants = async (req, res, next) =>{
     try{
         const query = req.body;
-        const userDoc = await firestore.collection('admin').doc(query.uid).get();
 
+        let missing_fields = {};
+        let hasMissingFields = false;
+
+        if(!Includes(query, "uid")){
+            missing_fields.uid = true;
+            hasMissingFields = true;
+        }
+
+        if(!Includes(query, "booth")){
+            missing_fields.booth = true;
+            hasMissingFields = true;
+        }
+
+        if(hasMissingFields){
+            throw{
+                missing_fields
+            }
+        }
+
+        const userDoc = await firestore.collection('admin').doc(query.uid).get();
+         
         if(!(userDoc.exists)){
             throw {
                 error: {
@@ -99,11 +119,21 @@ const getQuizPaticipants = async (req, res, next) =>{
             }
         }
 
-        let quizes = await getQuizPaticipantsDocs(query.quiz_id);
+        let participants = await getPaticipantsByBooth(query.booth);
+        let gameResults = await getGameResultsByBooth(query.booth);
+
+        let participantsData = participants.map(doc => doc.data());
+        let gameResultsData = gameResults.map(doc => doc.data());
         
-        res.status(200).send(quizes.map(doc=> doc.data().user));
+        res.status(200).send({
+            success: true,
+            data: {
+                participants: participantsData,
+                gameResults: gameResultsData
+            }
+        });
     }catch(error){
-        res.status(400).send(error.code || error);
+        res.status(400).send(error);
     }
 }
 
@@ -167,7 +197,6 @@ const redeemQuizByEmailAndToken = async (req, res, next) =>{
 //admin authentication
 
 const adminLogin = async (req, res, next) =>{
-    console.log(req.body);
     try{
         const query = req.body;
         let validationResult = validateLoginRequest(query);
@@ -176,8 +205,8 @@ const adminLogin = async (req, res, next) =>{
             throw validationResult;
         }
     
-       let user = await getAdminDocByEmail(query.email);
-    
+       let user = await getAdminDocByUsername(query.username.toLowerCase());
+
        if(user == null){
            throw {
                error: {
@@ -186,7 +215,14 @@ const adminLogin = async (req, res, next) =>{
             }
         }
 
-        const userData = user.data();
+    const userData = user.data();
+
+       if(userData.username.toLowerCase() != query.username.toLowerCase())
+       throw {
+        error: {
+            incorrect_username: true
+        }
+       }
 
        if(userData.password != query.password)
        throw {
@@ -200,10 +236,12 @@ const adminLogin = async (req, res, next) =>{
             data: {
                 uid : user.id,
                 email: userData.email,
-                fullname: userData.fullname
+                username: userData.username,
+                booth: userData.booth
             }
         });
     }catch(error){
+        console.log(error);
         res.status(400).send(error);
     }
 }

@@ -29,6 +29,7 @@ const signup = async (req, res, next) =>{
         let userData = (await getUserDocByEmail(query.email));
         
         let booths = await (await getProgramData()).data().booths;
+         booths = booths.map(booth => booth.toLowerCase());
         console.log();
         if(!booths.includes(query.booth.toLowerCase())){
             throw {
