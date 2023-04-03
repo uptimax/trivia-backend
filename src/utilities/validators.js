@@ -31,6 +31,16 @@ function validateFullname(body, errorFields){
        return errorFields;
 }
 
+function validateUsername(body, errorFields){
+    if(Includes(body,"username")){
+        let isValid = isName(body.username);
+        if(!isValid){
+            errorFields['username'] = "Invalid username"
+        }
+       }
+       return errorFields;
+}
+
 function validateEmail(body, errorFields){
     if(Includes(body, 'email')){
         let isValid = isEmail(body.email);
@@ -138,7 +148,7 @@ var validateLoginRequest = (body)=>{
     let hasError = false;
  
     let keys = Object.keys(body);
-    let fields = ['email', 'password'];
+    let fields = ['username', 'password'];
  
     var i = 0;
  
@@ -150,7 +160,7 @@ var validateLoginRequest = (body)=>{
      }
     }
 
-    errorFields = validateEmail(body, errorFields);
+    errorFields = validateUsername(body, errorFields);
     errorFields = validatePassword(body, errorFields);
 
  

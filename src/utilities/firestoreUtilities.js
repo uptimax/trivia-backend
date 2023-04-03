@@ -38,14 +38,25 @@ async function getAdminDocByEmail(email){
     return users.docs.length == 0? null : users.docs[0];
 }
 
+async function getAdminDocByUsername(username){
+    let users = await firestore.collection('admin').where('username', '==', username.toLowerCase()).get();
+    console.log(users.docs);
+    return users.docs.length == 0? null : users.docs[0];
+}
+
 async function getProgramData(){
     let data = await firestore.collection('program_data').get();
     return  data.docs[0];
 }
 
-async function getQuizPaticipantsDocs(quiz_id){
-    let participants = await firestore.collection('active_quizes').where('quiz_id', '==', quiz_id);
-    return participants;
+async function getPaticipantsByBooth(booth){
+    let participants = await firestore.collection('users').where('booth', '==', booth).get();
+    return participants.docs;
+}
+
+async function getGameResultsByBooth(booth){
+    let participants = await firestore.collection('active_quizes').where('booth', '==', booth).get();
+    return participants.docs;
 }
 
 async function updateQuizById(quiz_id, data){
@@ -65,9 +76,11 @@ function Includes(data, key) {
 module.exports = {
     getUser,
     getUserDocByEmail,
+    getAdminDocByUsername,
     getAdminDocByEmail,
-    getQuizPaticipantsDocs,
+    getPaticipantsByBooth,
     getAdminDocByBooth,
+    getGameResultsByBooth,
     updateQuizById,
     Includes,
     getUserDocById,
