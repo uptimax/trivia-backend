@@ -8,10 +8,22 @@ async function getUser(uid){
     return user;
 }
 
+async function getUserQuizDocByUId(uid){
+    let quizes = firestore.collection('active_quizes').where("uid", '==', uid).limit(1);
+    let quizesDocs = await quizes.get();
+
+    return quizesDocs.size == 0? null: quizesDocs.docs[0];
+}
+
 async function getUserDocByEmail(email){
     let users = await firestore.collection('users').where('email', '==', email.toLowerCase()).get();
     console.log(users.docs.length);
     return users.docs.length == 0? null : users.docs[0];
+}
+
+async function getUserDocById(uid){
+    let user = await firestore.collection('users').doc(uid).get();
+    return user;
 }
 
 async function getAdminDocByBooth(booth){
@@ -24,6 +36,11 @@ async function getAdminDocByBooth(booth){
 async function getAdminDocByEmail(email){
     let users = await firestore.collection('admin').where('email', '==', email.toLowerCase()).get();
     return users.docs.length == 0? null : users.docs[0];
+}
+
+async function getProgramData(){
+    let data = await firestore.collection('program_data').get();
+    return  data.docs[0];
 }
 
 async function getQuizPaticipantsDocs(quiz_id){
@@ -52,5 +69,8 @@ module.exports = {
     getQuizPaticipantsDocs,
     getAdminDocByBooth,
     updateQuizById,
-    Includes
+    Includes,
+    getUserDocById,
+    getUserQuizDocByUId,
+    getProgramData
 }

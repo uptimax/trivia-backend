@@ -104,7 +104,7 @@ var validateSignupRequest = (body)=>{
     let hasError = false;
  
     let keys = Object.keys(body);
-    let fields = ['fullname', 'email', 'password', 'phonenumber', 'booth'];
+    let fields = ['fullname', 'email', 'phonenumber', 'booth'];
  
     var i = 0;
     
@@ -118,7 +118,6 @@ var validateSignupRequest = (body)=>{
     }
 
     errorFields = validateEmail(body, errorFields);
-    errorFields = validatePassword(body, errorFields);
     errorFields = validateFullname(body, errorFields);
     errorFields = validatePhonenumber(body, errorFields);
 

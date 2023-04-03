@@ -2,7 +2,7 @@
 const { query } = require('express');
 const firebase = require('../db');
 const User = require('../models/user');
-const { updateQuizById } = require('../utilities/firestoreUtilities');
+const { updateQuizById, getUserDocByEmail, getUserDocById, Includes, getUserQuizDocByUId } = require('../utilities/firestoreUtilities');
 
 const firestore = firebase.firestore;
 
@@ -44,7 +44,9 @@ async function getQuizDataFromUser(uid, quizId){
     return (await userQuiz.get()).data()
 }
 
-function hasExpired(startTime, now){
+function hasExpired(expiry_date){
+    let expiry = new Date(expiry_date);
+    return expiry > Date.now();
 // new Date(quiz.start_date) startTime < 0? true: false;
 }
 
@@ -72,6 +74,22 @@ function getFourRandomQuestions(questions, randomQuestions){
         return getFourRandomQuestions(questions, randomQuestions);
     }
     return randomQuestions;
+}
+
+async function getExpiryDate(){
+    let expiry_date = await firestore.collection('program_data').doc("dhbrI21TGoBEnV3cvIu4").get();
+    return expiry_date.data().expiry_date;
+}
+
+ function checkForUIField(data){
+    if(!Includes(data, 'uid'))
+    {
+        throw {
+            "missing_fields": {
+                uid: true
+            }
+        }
+    }
 }
 
 const enterQuiz = async (req, res, next) =>{ // this controller apply a specified user for a a quiz
@@ -184,63 +202,132 @@ const enterQuiz = async (req, res, next) =>{ // this controller apply a specifie
     }
 }
 
-const markQuizAsCompleted = async (req, res, next) =>{ // this controller apply a specified user for a a quiz
+async function quizExpired(){
+    let expiry_date = await getExpiryDate();
+       if(hasExpired(expiry_date)){
+        throw {
+            error: {
+               program_expired : true
+            }
+        }
+       }
+}
+
+
+const checkExpiryStatus = async (req, res, next) =>{ // this controller apply a specified user for a a quiz
+      try {
+        checkForUIField(req.body);
+        let user = await getUserDocById(req.body.uid);
+
+        if(!user.exists){
+        throw {
+            errors: {
+                unauthorized_user: true
+            }
+        }
+       }
+
+       let expiry_date = await getExpiryDate();
+       console.log(expiry_date);
+       let expiry_status = hasExpired(expiry_date);
+       res.status(200).send({
+        success: true,
+        data:{
+            expiry_status
+        }
+       })
+
+      } catch (error) {
+        console.log(error);
+        res.status(400).send(error);
+      }
+};
+
+    const markQuizAsCompleted = async (req, res, next) =>{ // this controller apply a specified user for a a quiz
     try{
         let query = req.body;
-        let userQuiz = await getUserQuizDoc(query.uid, query.quiz_id);
-        let quiz = await getQuizDocFromQuizes(query.quiz_id);
+        let missing_fields = {};
+        let hasMissingFields = false;
 
-        if(quiz == null){
+        if(!Includes(query, "uid")){
+            missing_fields.uid = true;
+            hasMissingFields = true;
+        }
+
+        if(!Includes(query, 'score')){
+            missing_fields.score = true;
+            hasMissingFields = true;
+        }
+
+        if(!Includes(query, 'totalquestions')){
+            missing_fields.totalquestions = true;
+            hasMissingFields = true;
+        }
+
+        if(hasMissingFields){
             throw{
-                error:{
-                    invalid_quiz: true
-                }
+                missing_fields
             }
         }
 
-        if(hasExpired(new Date(quiz.expiry_date), new Date(quiz.start_date))){
+        var invalidTypes = {}
+        let hasInvalidTypes = false;
+
+        if(typeof query.totalquestions != 'number'){
+            invalidTypes.totalquestions = true;
+            hasInvalidTypes = true;
+        }
+
+        if(typeof query.score!= 'number'){
+            invalidTypes.score = true;
+            hasInvalidTypes = true;
+        }
+
+        if(hasInvalidTypes){
+            throw{
+                invalidTypes
+            }
+        }
+
+
+        let user = await getUserDocById(query.uid);
+
+        if(!user.exists){
+        throw {
+            errors: {
+                unauthorized_user: true
+            }
+        }
+       }
+
+       await quizExpired();
+
+        let userQuiz = await getUserQuizDocByUId(query.uid);
+        if(userQuiz != null){
             throw {
-                error:{
-                    quiz_expired: true
+                error: {
+                    quiz_already_completed: true,
                 }
             }
         }
-
-
-        let userQuizData = userQuiz.data();
-        let questions = quiz.data().questions;
-
-        let score = 0;
-        let i = 0;
-
-        for(let answer of query.answers){
-            for(let question of questions){
-                if(answer.index == question.index)
-                if(answer.answer.toLowerCase() == question.answer.toLowerCase()){
-                 score += 1;
-                }
-            }
-            i += 1;
-        }
-        
-        updateQuizById(userQuiz.id, {
-            completed: true,
+       
+        firestore.collection('active_quizes').doc().set({
+            uid: query.uid,
+            user: User.fromDocToJson(user),
+            booth: user.data().booth,
             score: query.score,
-            finished: true,
-            score,
-            quiz_won: score == userQuizData.total_question_per_user? true : false
-        });
-
+            totalquestions: query.totalquestions,
+            completed: true,
+            completion_date: Date.now(),
+        })
 
         res.status(200).send({
             success: true,
-            data:{
-                quiz_id: quiz.id
-            }
         });
 
     }catch(error){
-        res.status(400).send(error.code || error);
+        console.log(error);
+        res.status(400).send(error);
     }
 }
 
@@ -357,4 +444,5 @@ module.exports = {
     enterQuiz,
     markQuizAsCompleted,
     redeemQuiz,
+    checkExpiryStatus,
 }
