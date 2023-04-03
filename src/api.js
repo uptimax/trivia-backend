@@ -24,9 +24,9 @@ app.use(express.urlencoded({extended: false}));
 // app.use('/quiz', quizRoutes.routes);
 // app.use('/admin', adminRoutes.routes);
 
-// router.use('/user', userRoutes.routes);
-// router.use('/quiz', quizRoutes.routes);
-// router.use('/admin', adminRoutes.routes);
+router.use('/user', userRoutes.routes);
+router.use('/quiz', quizRoutes.routes);
+router.use('/admin', adminRoutes.routes);
 
 // app.use(expressSession({
 //     secret: 'sfjalskfjalkjsdfklasd',
