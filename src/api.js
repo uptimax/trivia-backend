@@ -7,8 +7,6 @@ const app = express();
 
 const router = express.Router();
 
-const config = require('./config');
-
 const userRoutes = require('./routes/user-routes');
 const quizRoutes = require('./routes/quiz-routes');
 const adminRoutes = require('./routes/admin-routes');
