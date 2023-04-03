@@ -212,10 +212,10 @@ const adminSignup = async (req, res, next) =>{
     try{
         const query = req.body;
 
-        let validationResult = validateAdminSignupRequest(query);
-        if( validationResult != null){
-            throw validationResult;
-        }
+        // let validationResult = validateAdminSignupRequest(query);
+        // if( validationResult != null){
+        //     throw validationResult;
+        // }
         
         let userDoc = (await getAdminDocByEmail(query.email));
 
@@ -233,7 +233,7 @@ const adminSignup = async (req, res, next) =>{
         });
 
         const user = await firestore.collection('admin').doc(newUser.uid).set({
-            fullname: query.fullname,
+            booth: query.booth,
             email: query.email,
             password: query.password
         });

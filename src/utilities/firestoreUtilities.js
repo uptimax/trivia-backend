@@ -10,6 +10,13 @@ async function getUser(uid){
 
 async function getUserDocByEmail(email){
     let users = await firestore.collection('users').where('email', '==', email.toLowerCase()).get();
+    console.log(users.docs.length);
+    return users.docs.length == 0? null : users.docs[0];
+}
+
+async function getAdminDocByBooth(booth){
+    let users = await firestore.collection('admin').where('booth', '==', booth.toLowerCase()).get();
+    console.log(users.docs.length);
     return users.docs.length == 0? null : users.docs[0];
 }
 
@@ -33,11 +40,17 @@ async function updateQuizById(quiz_id, data){
     }
 }
 
+function Includes(data, key) {
+    return Object.keys(data).includes(key);
+}
+
 
 module.exports = {
     getUser,
     getUserDocByEmail,
     getAdminDocByEmail,
     getQuizPaticipantsDocs,
-    updateQuizById
+    getAdminDocByBooth,
+    updateQuizById,
+    Includes
 }

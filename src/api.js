@@ -7,7 +7,7 @@ const app = express();
 
 const router = express.Router();
 
-const config = require('./config');
+// const config = require('./config');
 
 const userRoutes = require('./routes/user-routes');
 const quizRoutes = require('./routes/quiz-routes');
@@ -18,12 +18,13 @@ app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({extended: true}));
 
+// app.use('/user', userRoutes.routes);
+// app.use('/quiz', quizRoutes.routes);
+// app.use('/admin', adminRoutes.routes);
+
 router.use('/user', userRoutes.routes);
 router.use('/quiz', quizRoutes.routes);
 router.use('/admin', adminRoutes.routes);
-router.post('/', (req ,res)=>{
-  res.send('am alive');
-});
 // app.use(expressSession({
 //     secret: 'sfjalskfjalkjsdfklasd',
 //     resave: false,

@@ -1,3 +1,5 @@
+const { Includes } = require("./firestoreUtilities");
+
 function isEmail(email){
     let result = email.search(/[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/);
     return result > -1;
@@ -20,7 +22,7 @@ function isPassword(password){
 //validators
 
 function validateFullname(body, errorFields){
-    if(body?.fullname){
+    if(Includes(body,"fullname")){
         let isValid = isName(body.fullname);
         if(!isValid){
             errorFields['fullname'] = "Invalid fullname"
@@ -30,7 +32,7 @@ function validateFullname(body, errorFields){
 }
 
 function validateEmail(body, errorFields){
-    if(body?.email){
+    if(Includes(body, 'email')){
         let isValid = isEmail(body.email);
         if(!isValid){
             errorFields['email'] = "invalid Email address"
@@ -40,7 +42,7 @@ function validateEmail(body, errorFields){
 }
 
 function validatePhonenumber(body, errorFields){
-    if(body?.phonenumber){
+    if(Includes(body,"phonenumber")){
         let isValid = isPhone(body.phonenumber);
         if(!isValid){
             errorFields['phonenumber'] = "Phone number should atleast 11 characters long"
@@ -50,8 +52,8 @@ function validatePhonenumber(body, errorFields){
 }
 
 function validatePassword(body, errorFields){
-    if(body?.password){
-        let isValid = isName(body.password);
+    if(Includes(body, "password")){
+        let isValid = isPassword(body.password);
         if(!isValid){
             errorFields['password'] = "Password should be atleast 8 characters in length"
         }
@@ -102,7 +104,7 @@ var validateSignupRequest = (body)=>{
     let hasError = false;
  
     let keys = Object.keys(body);
-    let fields = ['fullname', 'email', 'password', 'phonenumber'];
+    let fields = ['fullname', 'email', 'password', 'phonenumber', 'booth'];
  
     var i = 0;
     
