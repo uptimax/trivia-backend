@@ -272,13 +272,14 @@ const checkExpiryStatus = async (req, res, next) =>{ // this controller apply a 
 
         var invalidTypes = {}
         let hasInvalidTypes = false;
-
-        if(typeof query.totalquestions != 'number'){
+        console.log(query.body);
+        
+        if((typeof query.totalquestions).toString() == 'NaN'){
             invalidTypes.totalquestions = true;
             hasInvalidTypes = true;
         }
 
-        if(typeof query.score!= 'number'){
+        if((typeof query.score).toString() == 'NaN'){
             invalidTypes.score = true;
             hasInvalidTypes = true;
         }
@@ -315,10 +316,11 @@ const checkExpiryStatus = async (req, res, next) =>{ // this controller apply a 
             uid: query.uid,
             user: User.fromDocToJson(user),
             booth: user.data().booth,
-            score: query.score,
-            totalquestions: query.totalquestions,
+            score: parseInt(query.score),
+            totalquestions: parseInt(query.totalquestions),
             completed: true,
             completion_date: Date.now(),
+            redeemed: false
         })
 
         res.status(200).send({
@@ -335,7 +337,8 @@ const redeemQuiz = async (req, res, next) =>{ // this controller apply a specifi
     try{
         let data = req.body;
 
-        let userQuiz = await getUserQuizDoc(query.uid, query.quiz_id);
+        let userQuiz = await getUserQuizDoc(query.uid);
+        
         
         if(userQuiz == null){
              throw {
