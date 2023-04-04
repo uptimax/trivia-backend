@@ -2,7 +2,7 @@
 const { ConvertCsvToJson } = require('../csvtojson_converter');
 // const { query } = require('express');
 const firebase = require('../db');
-const { getUser, getUserDocByEmail, getAdminDocByEmail, getGameResultsByBooth, getPaticipantsByBooth, getAdminDocByUsername } = require('../utilities/firestoreUtilities');
+const { getUser, getUserDocByEmail, getAdminDocByEmail, getGameResultsByBooth, getPaticipantsByBooth, getAdminDocByUsername, Includes } = require('../utilities/firestoreUtilities');
 const { validateSignupRequest, validateLoginRequest, validateAdminSignupRequest } = require('../utilities/validators');
 
 const firestore = firebase.firestore;
@@ -133,6 +133,7 @@ const getQuizPaticipants = async (req, res, next) =>{
             }
         });
     }catch(error){
+        console.log(error);
         res.status(400).send(error);
     }
 }
