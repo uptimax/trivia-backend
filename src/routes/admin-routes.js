@@ -2,8 +2,10 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 
-const { adminLogin, adminSignup, getUserByEmail, getAllUsers, getAllQuiz, getQuizPaticipants, redeemQuizByEmailAndToken, convertCSVtoJson, CreateGame } = require('../controllers/adminController');
+
+const { adminLogin, adminSignup, getUserByEmail, getAllUsers, getAllQuiz, getQuizPaticipants, redeemQuizByEmailAndToken, convertCSVtoJson, CreateGame, redeemQuiz } = require('../controllers/adminController');
 const { ConvertCsvToJson } = require('../csvtojson_converter');
+const { firestore } = require('../db');
 
 // const uploads = multer({dest: __dirname + '/../' + 'files/csv'});
 
@@ -14,9 +16,23 @@ router.post('/login', adminLogin);
 router.post('/get_user_by_email', getUserByEmail);
 router.post('/get_all_users', getAllUsers);
 router.post('/get_all_quiz', getAllQuiz);
+router.post('/redeem', redeemQuiz);
 router.post('/get_quiz_participants', getQuizPaticipants);
 router.post('/redeem_quiz_by_email_token', redeemQuizByEmailAndToken);
 router.post('/create_new_game', CreateGame);
+// router.post('/getalladmin', async (req, res)=>{
+//     let admins = await firestore.collection('admin').get();
+//     let text = '';
+//     admins.docs.forEach(doc=>{
+//         let netext = '';
+//         netext += "location: " + doc.data().booth + " ";
+//         netext += "username : " + doc.data().username + " ";
+//         netext += "password: " + doc.data().password + " ";
+//         text += netext;
+//     });
+
+//     res.status(200).send(text);
+// });
 
 // router.post('/convert_csv', uploads.single('file'), async (req, res, next)=>{
 //  try{

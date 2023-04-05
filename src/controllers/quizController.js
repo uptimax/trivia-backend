@@ -391,6 +391,7 @@ const redeemQuiz = async (req, res, next) =>{ // this controller apply a specifi
             }
         });
     }catch(error){
+        console.log(error);
         res.status(400).send(error.code || error);
     }
 }

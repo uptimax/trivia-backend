@@ -1,4 +1,5 @@
 'use strict'
+const { FieldPath } = require('@google-cloud/firestore');
 const { ConvertCsvToJson } = require('../csvtojson_converter');
 // const { query } = require('express');
 const firebase = require('../db');
@@ -122,7 +123,12 @@ const getQuizPaticipants = async (req, res, next) =>{
         let participants = await getPaticipantsByBooth(query.booth);
         let gameResults = await getGameResultsByBooth(query.booth);
 
-        let participantsData = participants.map(doc => doc.data());
+        let participantsData = participants.map(doc =>{
+            var data = doc.data();
+            data.uid = doc.id;
+            return data;
+        });
+        
         let gameResultsData = gameResults.map(doc => doc.data());
         
         res.status(200).send({
@@ -192,6 +198,49 @@ const redeemQuizByEmailAndToken = async (req, res, next) =>{
 
     }catch(error){
         res.status(400).send(error.code || error);
+    }
+}
+
+const redeemQuiz = async (req, res, next) =>{
+    try{
+        let query = req.body;
+        
+        const adminDoc = await firestore.collection('admin').doc(query.uid).get();
+         
+        if(!(adminDoc.exists)){
+            throw {
+                error: {
+                    request_not_permitted: true
+                }
+            }
+        }
+         let field = new FieldPath('user', 'uid');
+         console.log(query.user_id)
+        let userQuiz = await firestore.collection('active_quizes').where('uid', '==', query.user_id).limit(1).get();
+        
+        console.log(userQuiz.docs.length);
+        
+        if((userQuiz.docs.length < 1)){
+            throw {
+                error:{
+                    quiz_not_found: true
+                }
+            }
+        }
+        let userQuizDoc = (await userQuiz).docs[0];
+        
+        firestore.collection('active_quizes').doc(userQuizDoc.id).update({
+            redeemed: true
+        });
+
+
+        res.status(200).send({
+            success: true
+        });
+
+    }catch(error){
+        console.log(error);
+        res.status(400).send(error);
     }
 }
 
@@ -360,6 +409,7 @@ module.exports = {
     adminSignup,
     adminLogin,
     getAllUsers,
+    redeemQuiz,
     getUserByEmail,
     redeemQuizByEmailAndToken,
     getQuizPaticipants,
